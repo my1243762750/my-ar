@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AR 项目</title>
+    <title>酷炫AR体验</title>
     
     <!-- A-Frame 核心库 -->
     <script src="https://aframe.io/releases/1.4.0/aframe.min.js"></script>
@@ -11,434 +11,598 @@
     <!-- AR.js 库 -->
     <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
     
-    <!-- Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- 物理引擎 -->
+    <script src="https://unpkg.com/aframe-physics-system@1.4.2/dist/aframe-physics-system.min.js"></script>
     
-    <!-- Font Awesome -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <!-- 环境组件 -->
+    <script src="https://unpkg.com/aframe-environment-component@1.3.2/dist/aframe-environment-component.min.js"></script>
+    
+    <!-- 声音组件 -->
+    <script src="https://unpkg.com/aframe-sound-component@0.3.4/dist/aframe-sound-component.min.js"></script>
+    
+    <!-- 手势控制 -->
+    <script src="https://unpkg.com/aframe-gesture-detector@1.1.8/dist/aframe-gesture-detector.min.js"></script>
     
     <style>
-        .font-inter {
-            font-family: 'Inter', sans-serif;
+        body {
+            margin: 0;
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            overflow: hidden;
         }
-        .bg-primary {
-            background-color: #3b82f6;
-        }
-    </style>
-</head>
-<body class="font-inter bg-gray-900 text-white overflow-hidden h-screen">
-    <a-scene 
-      vr-mode-ui="enabled: false" 
-      renderer="colorManagement: true, logarithmicDepthBuffer: true"
-      arjs="sourceType: webcam; debugUIEnabled: true;"
-      cursor="rayOrigin: mouse">
-      
-      <!-- 相机（去掉光标环） -->
-      <a-entity camera look-controls></a-entity>
-      
-      <!-- 标记和3D模型 -->
-      <a-marker preset="hiro">
-        <a-entity 
-          id="ar-model"
-          gltf-model="#coolModel"
-          scale="2 2 2"
-          position="0 0 0"
-          rotation="0 180 0"
-          animation="property: rotation; to: 0 540 0; loop: true; dur: 10000; easing: linear">
-        </a-entity>
-      </a-marker>
-      
-      <a-assets>
-        <a-asset-item id="coolModel" src="models/ToyCar.glb"></a-asset-item>
-      </a-assets>
-    </a-scene>
-    
-    <!-- 信息面板 -->
-    <div class="fixed bottom-0 left-0 right-0 p-4 bg-black/70 backdrop-blur z-50">
-        <div class="text-center">
-            <h3 class="text-lg font-semibold mb-2">AR 体验</h3>
-            <p class="text-sm text-gray-300">将手机屏幕上的 Hiro 标记对准电脑摄像头</p>
-            <div id="cameraStatus" class="text-xs text-yellow-400 mt-1">
-                <i class="fa fa-camera mr-1"></i>正在初始化摄像头...
-            </div>
-        </div>
-    </div>
-    
-    <!-- 标记卡提示 -->
-    <div id="markerHint" class="fixed top-0 left-0 right-0 bottom-0 bg-black/80 backdrop-blur z-40 flex items-center justify-center">
-        <div class="bg-white/10 backdrop-blur rounded-lg p-6 max-w-md mx-4 text-center">
-            <div class="mb-4">
-                <h2 class="text-xl font-bold mb-2">准备开始 AR 体验</h2>
-                <p class="text-gray-300">请按以下步骤操作：</p>
-                <ol class="text-left text-sm text-gray-300 mt-2 space-y-1">
-                    <li>1. 在手机上打开 Hiro 标记图片</li>
-                    <li>2. 将手机屏幕对准电脑摄像头</li>
-                    <li>3. 保持手机屏幕稳定，等待识别</li>
-                </ol>
-            </div>
-            <div class="relative w-32 h-32 mx-auto mb-4">
-                <img src="https://jeromeetienne.github.io/AR.js/data/images/hiro.png" 
-                     alt="Hiro Marker" 
-                     class="w-full h-full object-contain border-2 border-white/20 rounded-lg">
-            </div>
-            <div class="mb-4 text-center">
-                <p class="text-xs text-gray-400 mb-2">或者扫描二维码在手机上打开</p>
-                <div class="w-24 h-24 mx-auto bg-white p-2 rounded">
-                    <img src="https://api.qrserver.com/v1/create-qr-code/?size=96x96&data=https://jeromeetienne.github.io/AR.js/data/images/hiro.png" 
-                         alt="QR Code" 
-                         class="w-full h-full">
-                </div>
-            </div>
-            <div class="flex gap-2 justify-center">
-                <button onclick="showMarkerFullscreen()" 
-                        class="px-4 py-2 bg-green-600 text-white rounded-lg">
-                    <i class="fa fa-expand mr-2"></i>全屏显示标记
-                </button>
-                <button onclick="testAR()" 
-                        class="px-4 py-2 bg-blue-600 text-white rounded-lg">
-                    <i class="fa fa-play mr-2"></i>测试AR功能
-                </button>
-                <button onclick="checkCamera()" 
-                        class="px-4 py-2 bg-purple-600 text-white rounded-lg">
-                    <i class="fa fa-camera mr-2"></i>检查摄像头
-                </button>
-                <button onclick="showCameraFeed()" 
-                        class="px-4 py-2 bg-orange-600 text-white rounded-lg">
-                    <i class="fa fa-eye mr-2"></i>查看摄像头画面
-                </button>
-                <a href="https://jeromeetienne.github.io/AR.js/data/images/hiro.png" 
-                   target="_blank"
-                   class="px-4 py-2 bg-primary text-white rounded-lg">
-                    <i class="fa fa-mobile-alt mr-2"></i>在手机上打开标记
-                </a>
-            </div>
-        </div>
-    </div>
-    
-    <script>
-      // 请求摄像头权限
-      async function requestCameraPermission() {
-        try {
-          const stream = await navigator.mediaDevices.getUserMedia({ 
-            video: { 
-              facingMode: 'environment',
-              width: { ideal: 1280 },
-              height: { ideal: 720 }
-            } 
-          });
-          console.log('摄像头权限已获取');
-          return true;
-        } catch (error) {
-          console.error('摄像头权限被拒绝:', error);
-          alert('需要摄像头权限才能使用AR功能。请允许摄像头访问。');
-          return false;
-        }
-      }
-
-      // 等待 A-Frame 加载完成
-      document.addEventListener('DOMContentLoaded', async function() {
-        // 请求摄像头权限
-        await requestCameraPermission();
-        // 注册点击交互组件
-        AFRAME.registerComponent('click-listener', {
-          init: function() {
-            this.el.addEventListener('click', (e) => {
-              // 点击时暂停自动旋转，改为手动控制
-              this.el.removeAttribute('animation');
-              // 添加缩放动画反馈
-              this.el.setAttribute('animation__scale', {
-                property: 'scale',
-                from: '0.01 0.01 0.01',
-                to: '0.015 0.015 0.015',
-                dur: 300,
-                easing: 'easeOutElastic',
-                dir: 'alternate'
-              });
-            });
-          }
-        });
-    
-        // 模型旋转控制（触摸屏适用）
-        const model = document.getElementById('ar-model');
-        let isDragging = false;
-        let startX, startY;
-        let startRotationY = 0;
-    
-        model.addEventListener('mousedown', (e) => {
-          isDragging = true;
-          startX = e.clientX;
-          startY = e.clientY;
-          startRotationY = model.getAttribute('rotation').y;
-        });
-    
-        window.addEventListener('mousemove', (e) => {
-          if (!isDragging) return;
-          const deltaX = e.clientX - startX;
-          model.setAttribute('rotation', `0 ${startRotationY + deltaX * 0.5} 0`);
-        });
-    
-        window.addEventListener('mouseup', () => isDragging = false);
         
-        // 隐藏标记提示当检测到标记时
-        const scene = document.querySelector('a-scene');
-        scene.addEventListener('markerFound', function() {
-          document.getElementById('markerHint').style.display = 'none';
-        });
-        
-        // 添加AR状态检测
-        scene.addEventListener('camera-init', function() {
-          console.log('AR摄像头已初始化');
-          document.getElementById('markerHint').style.display = 'flex';
-          document.getElementById('cameraStatus').innerHTML = '<i class="fa fa-camera mr-1"></i>摄像头已就绪';
-          document.getElementById('cameraStatus').className = 'text-xs text-green-400 mt-1';
-        });
-        
-        scene.addEventListener('camera-error', function(error) {
-          console.error('AR摄像头错误:', error);
-          document.getElementById('cameraStatus').innerHTML = '<i class="fa fa-exclamation-triangle mr-1"></i>摄像头初始化失败';
-          document.getElementById('cameraStatus').className = 'text-xs text-red-400 mt-1';
-          alert('AR摄像头初始化失败，请检查摄像头权限和浏览器支持。');
-        });
-        
-        // 添加标记检测事件
-        scene.addEventListener('markerFound', function() {
-          console.log('✅ 检测到Hiro标记！');
-          document.getElementById('markerHint').style.display = 'none';
-          document.getElementById('cameraStatus').innerHTML = '<i class="fa fa-check mr-1"></i>标记已识别';
-          document.getElementById('cameraStatus').className = 'text-xs text-green-400 mt-1';
-        });
-        
-        scene.addEventListener('markerLost', function() {
-          console.log('❌ 失去Hiro标记');
-          document.getElementById('markerHint').style.display = 'flex';
-          document.getElementById('cameraStatus').innerHTML = '<i class="fa fa-camera mr-1"></i>等待标记...';
-          document.getElementById('cameraStatus').className = 'text-xs text-yellow-400 mt-1';
-        });
-        
-        // 添加调试信息
-        console.log('AR场景已加载，等待摄像头初始化...');
-        
-        // 延迟检测AR.js系统
-        setTimeout(() => {
-          const scene = document.querySelector('a-scene');
-          if (scene) {
-            const arSystem = scene.systems['arjs'];
-            if (arSystem) {
-              console.log('✅ AR.js系统已成功加载');
-              document.getElementById('cameraStatus').innerHTML = '<i class="fa fa-check mr-1"></i>AR系统就绪';
-              document.getElementById('cameraStatus').className = 'text-xs text-green-400 mt-1';
-            } else {
-              console.log('❌ AR.js系统仍未加载');
-              document.getElementById('cameraStatus').innerHTML = '<i class="fa fa-exclamation-triangle mr-1"></i>AR系统未加载';
-              document.getElementById('cameraStatus').className = 'text-xs text-red-400 mt-1';
-              
-              // 尝试备用方案
-              console.log('尝试备用AR方案...');
-              if (window.AFRAME) {
-                console.log('AFRAME可用，尝试手动注册AR组件');
-              }
-            }
-          }
-        }, 2000);
-        
-        // 测试AR功能
-        window.testAR = function() {
-          console.log('测试AR功能...');
-          const scene = document.querySelector('a-scene');
-          if (scene) {
-            console.log('AR场景存在');
-            
-            // 检查AR.js系统
-            const arSystem = scene.systems['arjs'];
-            if (arSystem) {
-              console.log('AR.js系统已加载');
-              console.log('AR配置:', arSystem.arProfile);
-              
-              // 检查摄像头流
-              if (arSystem.arProfile && arSystem.arProfile.sourceParameters) {
-                console.log('摄像头参数:', arSystem.arProfile.sourceParameters);
-              }
-            } else {
-              console.log('AR.js系统未找到');
-            }
-            
-            // 检查摄像头
-            const camera = scene.querySelector('[camera]');
-            if (camera) {
-              console.log('摄像头实体存在');
-              // 检查摄像头是否有视频纹理
-              const videoTexture = camera.getAttribute('material')?.src;
-              if (videoTexture) {
-                console.log('摄像头视频纹理存在');
-              } else {
-                console.log('摄像头视频纹理不存在');
-              }
-            } else {
-              console.log('摄像头实体不存在');
-            }
-            
-            // 检查标记
-            const marker = scene.querySelector('a-marker');
-            if (marker) {
-              console.log('标记实体存在');
-              console.log('标记预设:', marker.getAttribute('preset'));
-            } else {
-              console.log('标记实体不存在');
-            }
-            
-            // 检查3D模型
-            const model = document.getElementById('ar-model');
-            if (model) {
-              console.log('3D模型存在');
-              const modelSrc = model.getAttribute('gltf-model');
-              console.log('模型源:', modelSrc);
-            } else {
-              console.log('3D模型不存在');
-            }
-          } else {
-            console.log('AR场景未找到');
-          }
-        };
-        
-        // 显示摄像头画面
-        window.showCameraFeed = function() {
-          console.log('显示摄像头画面...');
-          
-          // 创建摄像头画面显示窗口
-          const feedDiv = document.createElement('div');
-          feedDiv.style.cssText = `
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            width: 400px;
-            height: 300px;
-            background: #000;
-            border: 2px solid #fff;
-            border-radius: 8px;
-            z-index: 10000;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-size: 14px;
-          `;
-          
-          feedDiv.innerHTML = `
-            <div style="text-align: center;">
-              <div style="margin-bottom: 10px;">摄像头画面预览</div>
-              <video id="cameraFeed" autoplay muted style="max-width: 100%; max-height: 100%;"></video>
-              <div style="margin-top: 10px;">
-                <button onclick="this.parentElement.parentElement.parentElement.remove()" 
-                        style="padding: 5px 10px; background: #f00; color: white; border: none; border-radius: 4px; cursor: pointer;">
-                  关闭
-                </button>
-              </div>
-            </div>
-          `;
-          
-          document.body.appendChild(feedDiv);
-          
-          // 获取摄像头流
-          navigator.mediaDevices.getUserMedia({ video: true })
-            .then(function(stream) {
-              const video = document.getElementById('cameraFeed');
-              video.srcObject = stream;
-              console.log('摄像头画面已显示');
-            })
-            .catch(function(error) {
-              console.error('无法显示摄像头画面:', error);
-              feedDiv.innerHTML = `
-                <div style="text-align: center; color: red;">
-                  无法访问摄像头<br>
-                  ${error.message}
-                  <br><br>
-                  <button onclick="this.parentElement.parentElement.remove()" 
-                          style="padding: 5px 10px; background: #f00; color: white; border: none; border-radius: 4px; cursor: pointer;">
-                    关闭
-                  </button>
-                </div>
-              `;
-            });
-        };
-        
-        // 检查摄像头功能
-        window.checkCamera = function() {
-          console.log('检查摄像头功能...');
-          
-          // 检查是否有摄像头权限
-          navigator.mediaDevices.getUserMedia({ video: true })
-            .then(function(stream) {
-              console.log('✅ 摄像头权限正常');
-              console.log('摄像头轨道:', stream.getVideoTracks());
-              
-              // 获取摄像头信息
-              const videoTrack = stream.getVideoTracks()[0];
-              if (videoTrack) {
-                const capabilities = videoTrack.getCapabilities();
-                console.log('摄像头能力:', capabilities);
-                
-                const settings = videoTrack.getSettings();
-                console.log('摄像头设置:', settings);
-              }
-              
-              // 停止流
-              stream.getTracks().forEach(track => track.stop());
-            })
-            .catch(function(error) {
-              console.error('❌ 摄像头权限错误:', error);
-              alert('摄像头权限被拒绝或不可用: ' + error.message);
-            });
-        };
-        
-        // 全屏显示标记功能
-        window.showMarkerFullscreen = function() {
-          const markerUrl = 'https://jeromeetienne.github.io/AR.js/data/images/hiro.png';
-          const fullscreenDiv = document.createElement('div');
-          fullscreenDiv.style.cssText = `
+        .loading {
             position: fixed;
             top: 0;
             left: 0;
-            width: 100vw;
-            height: 100vh;
-            background: rgba(0,0,0,0.9);
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(45deg, #ff6b6b, #4ecdc4, #45b7d1, #96ceb4, #feca57);
+            background-size: 400% 400%;
+            animation: gradientShift 3s ease infinite;
             display: flex;
             align-items: center;
             justify-content: center;
-            z-index: 9999;
+            z-index: 10000;
+            color: white;
+            font-size: 24px;
+            text-align: center;
+        }
+        
+        @keyframes gradientShift {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+        
+        .ui-panel {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0,0,0,0.8);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 20px;
+            color: white;
+            text-align: center;
+            z-index: 1000;
+            border: 2px solid rgba(255,255,255,0.2);
+        }
+        
+        .control-btn {
+            background: linear-gradient(45deg, #ff6b6b, #4ecdc4);
+            border: none;
+            color: white;
+            padding: 10px 20px;
+            margin: 5px;
+            border-radius: 25px;
             cursor: pointer;
-          `;
-          
-          const img = document.createElement('img');
-          img.src = markerUrl;
-          img.style.cssText = `
-            max-width: 90vw;
-            max-height: 90vh;
-            object-fit: contain;
-            border: 2px solid white;
-            border-radius: 8px;
-          `;
-          
-          fullscreenDiv.appendChild(img);
-          document.body.appendChild(fullscreenDiv);
-          
-          // 点击关闭全屏
-          fullscreenDiv.addEventListener('click', function() {
-            document.body.removeChild(fullscreenDiv);
-          });
-        };
+            font-size: 14px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+        
+        .control-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+        }
+        
+        .status {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: rgba(0,0,0,0.8);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 15px;
+            color: white;
+            font-size: 12px;
+            z-index: 1000;
+        }
+    </style>
+</head>
+<body>
+    <div class="loading" id="loading">
+        <div>
+            <h2>🚀 酷炫AR体验</h2>
+            <p>正在加载超酷特效...</p>
+            <div style="margin-top: 20px;">
+                <div style="width: 200px; height: 4px; background: rgba(255,255,255,0.3); border-radius: 2px; overflow: hidden;">
+                    <div id="progress" style="width: 0%; height: 100%; background: linear-gradient(45deg, #ff6b6b, #4ecdc4); transition: width 0.3s;"></div>
+                </div>
+            </div>
+        </div>
+    </div>
 
-        // 在<script>内添加模型加载失败提示
-        AFRAME.registerComponent('model-error-listener', {
-          init: function () {
-            this.el.addEventListener('model-error', function (e) {
-              alert('3D模型加载失败，请检查网络或更换模型资源！');
-              console.error('3D模型加载失败:', e);
-            });
-          }
+    <a-scene 
+        vr-mode-ui="enabled: false"
+        renderer="colorManagement: true, logarithmicDepthBuffer: true"
+        arjs="sourceType: webcam; debugUIEnabled: false;"
+        embedded
+        physics="gravity: 0 -9.8 0; maxInterval: 0.0167; iterations: 20;"
+        environment="preset: forest; groundTexture: none; groundColor: #444; skyColor: #87CEEB; horizonColor: #87CEEB; fog: 0.8; flatShading: false;">
+        
+        <!-- 相机和控制器 -->
+        <a-entity camera look-controls="enabled: false" position="0 1.6 0">
+            <a-entity 
+                cursor="rayOrigin: mouse"
+                raycaster="objects: [interactive]; far: 100; interval: 50"
+                position="0 0 -1"
+                geometry="primitive: ring; radiusInner: 0.01; radiusOuter: 0.02"
+                material="color: #00ffff; shader: flat; opacity: 0.8">
+            </a-entity>
+        </a-entity>
+        
+        <!-- 光源 -->
+        <a-light type="directional" position="0 10 5" intensity="0.8"></a-light>
+        <a-light type="point" position="0 5 0" intensity="0.5" color="#ff6b6b"></a-light>
+        <a-light type="point" position="5 5 5" intensity="0.3" color="#4ecdc4"></a-light>
+        <a-light type="point" position="-5 5 -5" intensity="0.3" color="#45b7d1"></a-light>
+        
+        <!-- AR标记 -->
+        <a-marker preset="hiro" id="marker">
+            <!-- 主舞台 -->
+            <a-entity id="stage" position="0 0 0">
+                
+                <!-- 中央悬浮球体 -->
+                <a-sphere 
+                    id="main-sphere"
+                    radius="0.8"
+                    position="0 1.5 0"
+                    material="color: #ff6b6b; metalness: 0.8; roughness: 0.2; emissive: #ff6b6b; emissiveIntensity: 0.3"
+                    animation="property: rotation; to: 0 360 0; loop: true; dur: 8000; easing: linear"
+                    animation__scale="property: scale; from: 1 1 1; to: 1.2 1.2 1.2; loop: true; dir: alternate; dur: 2000; easing: easeInOutSine"
+                    interactive
+                    gesture-detector>
+                </a-sphere>
+                
+                <!-- 环绕球体 -->
+                <a-entity id="orbit-sphere-1" position="2 1.5 0">
+                    <a-sphere 
+                        radius="0.3"
+                        material="color: #4ecdc4; metalness: 0.7; roughness: 0.3; emissive: #4ecdc4; emissiveIntensity: 0.2"
+                        animation="property: rotation; to: 0 -360 0; loop: true; dur: 6000; easing: linear"
+                        interactive
+                        gesture-detector>
+                    </a-sphere>
+                </a-entity>
+                
+                <a-entity id="orbit-sphere-2" position="-2 1.5 0">
+                    <a-sphere 
+                        radius="0.3"
+                        material="color: #45b7d1; metalness: 0.7; roughness: 0.3; emissive: #45b7d1; emissiveIntensity: 0.2"
+                        animation="property: rotation; to: 0 360 0; loop: true; dur: 6000; easing: linear"
+                        interactive
+                        gesture-detector>
+                    </a-sphere>
+                </a-entity>
+                
+                <a-entity id="orbit-sphere-3" position="0 1.5 2">
+                    <a-sphere 
+                        radius="0.3"
+                        material="color: #96ceb4; metalness: 0.7; roughness: 0.3; emissive: #96ceb4; emissiveIntensity: 0.2"
+                        animation="property: rotation; to: 0 -360 0; loop: true; dur: 6000; easing: linear"
+                        interactive
+                        gesture-detector>
+                    </a-sphere>
+                </a-entity>
+                
+                <a-entity id="orbit-sphere-4" position="0 1.5 -2">
+                    <a-sphere 
+                        radius="0.3"
+                        material="color: #feca57; metalness: 0.7; roughness: 0.3; emissive: #feca57; emissiveIntensity: 0.2"
+                        animation="property: rotation; to: 0 360 0; loop: true; dur: 6000; easing: linear"
+                        interactive
+                        gesture-detector>
+                    </a-sphere>
+                </a-entity>
+                
+                <!-- 光环效果 -->
+                <a-ring 
+                    radius="1.5"
+                    radius-inner="1.3"
+                    position="0 0.1 0"
+                    rotation="-90 0 0"
+                    material="color: #ff6b6b; transparent: true; opacity: 0.3; emissive: #ff6b6b; emissiveIntensity: 0.5"
+                    animation="property: rotation; to: -90 0 360; loop: true; dur: 10000; easing: linear">
+                </a-ring>
+                
+                <a-ring 
+                    radius="2"
+                    radius-inner="1.8"
+                    position="0 0.05 0"
+                    rotation="-90 0 0"
+                    material="color: #4ecdc4; transparent: true; opacity: 0.2; emissive: #4ecdc4; emissiveIntensity: 0.3"
+                    animation="property: rotation; to: -90 0 -360; loop: true; dur: 15000; easing: linear">
+                </a-ring>
+                
+                <!-- 额外光环效果 -->
+                <a-ring 
+                    radius="2.5"
+                    radius-inner="2.3"
+                    position="0 0.02 0"
+                    rotation="-90 0 0"
+                    material="color: #45b7d1; transparent: true; opacity: 0.15; emissive: #45b7d1; emissiveIntensity: 0.2"
+                    animation="property: rotation; to: -90 0 360; loop: true; dur: 20000; easing: linear">
+                </a-ring>
+                
+                <!-- 动态光球 -->
+                <a-sphere 
+                    radius="0.1"
+                    position="0 2.5 0"
+                    material="color: #ffd700; emissive: #ffd700; emissiveIntensity: 1"
+                    animation="property: position; to: 0 3 0; loop: true; dir: alternate; dur: 2000; easing: easeInOutSine">
+                </a-sphere>
+                
+                <a-sphere 
+                    radius="0.08"
+                    position="1 2.3 0"
+                    material="color: #ff6b6b; emissive: #ff6b6b; emissiveIntensity: 0.8"
+                    animation="property: position; to: 1.5 2.8 0; loop: true; dir: alternate; dur: 2500; easing: easeInOutSine">
+                </a-sphere>
+                
+                <a-sphere 
+                    radius="0.08"
+                    position="-1 2.3 0"
+                    material="color: #4ecdc4; emissive: #4ecdc4; emissiveIntensity: 0.8"
+                    animation="property: position; to: -1.5 2.8 0; loop: true; dir: alternate; dur: 2500; easing: easeInOutSine">
+                </a-sphere>
+                
+                <!-- 浮动立方体 -->
+                <a-box 
+                    position="1.5 2 1.5"
+                    width="0.3" height="0.3" depth="0.3"
+                    material="color: #ff6b6b; metalness: 0.6; roughness: 0.4; emissive: #ff6b6b; emissiveIntensity: 0.2"
+                    animation="property: position; to: 1.5 2.5 1.5; loop: true; dir: alternate; dur: 3000; easing: easeInOutSine"
+                    animation__rotation="property: rotation; to: 0 360 0; loop: true; dur: 4000; easing: linear"
+                    interactive
+                    gesture-detector>
+                </a-box>
+                
+                <a-box 
+                    position="-1.5 2 -1.5"
+                    width="0.3" height="0.3" depth="0.3"
+                    material="color: #4ecdc4; metalness: 0.6; roughness: 0.4; emissive: #4ecdc4; emissiveIntensity: 0.2"
+                    animation="property: position; to: -1.5 2.5 -1.5; loop: true; dir: alternate; dur: 3500; easing: easeInOutSine"
+                    animation__rotation="property: rotation; to: 0 -360 0; loop: true; dur: 5000; easing: linear"
+                    interactive
+                    gesture-detector>
+                </a-box>
+                
+                <!-- 音效触发器 -->
+                <a-entity 
+                    position="0 3 0"
+                    sound="src: #click-sound; volume: 0.5; autoplay: false;"
+                    id="sound-trigger">
+                </a-entity>
+                
+            </a-entity>
+        </a-marker>
+        
+        <!-- 音效资源 -->
+        <a-assets>
+            <audio id="click-sound" src="https://cdn.freesound.org/previews/131/131660_2398403-lq.mp3" crossorigin="anonymous"></audio>
+        </a-assets>
+        
+    </a-scene>
+    
+    <!-- 控制面板 -->
+    <div class="ui-panel">
+        <h3 style="margin: 0 0 15px 0; color: #ff6b6b;">🎮 AR控制台</h3>
+        <button class="control-btn" onclick="toggleAnimation()">🎭 动画控制</button>
+        <button class="control-btn" onclick="changeColors()">🎨 换色模式</button>
+        <button class="control-btn" onclick="addExplosion()">💥 爆炸效果</button>
+        <button class="control-btn" onclick="playSound()">🔊 播放音效</button>
+        <button class="control-btn" onclick="toggleLights()">✨ 光效控制</button>
+    </div>
+    
+    <!-- 状态显示 -->
+    <div class="status">
+        <div>📱 AR状态: <span id="ar-status">初始化中...</span></div>
+        <div>🎯 标记状态: <span id="marker-status">等待标记...</span></div>
+        <div>✨ 特效状态: <span id="effect-status">就绪</span></div>
+    </div>
+    
+    <script>
+        // 全局变量
+        let animationEnabled = true;
+        let lightsEnabled = true;
+        let currentColorMode = 0;
+        const colorModes = [
+            ['#ff6b6b', '#4ecdc4', '#45b7d1', '#96ceb4', '#feca57'],
+            ['#ff0080', '#00ff80', '#0080ff', '#8000ff', '#ff8000'],
+            ['#ff0000', '#00ff00', '#0000ff', '#ffff00', '#ff00ff'],
+            ['#ffffff', '#cccccc', '#999999', '#666666', '#333333']
+        ];
+        
+        // 页面加载完成后初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            // 模拟加载进度
+            let progress = 0;
+            const progressBar = document.getElementById('progress');
+            const loading = document.getElementById('loading');
+            
+            const interval = setInterval(() => {
+                progress += Math.random() * 15;
+                if (progress >= 100) {
+                    progress = 100;
+                    clearInterval(interval);
+                    setTimeout(() => {
+                        loading.style.display = 'none';
+                        initAR();
+                    }, 500);
+                }
+                progressBar.style.width = progress + '%';
+            }, 100);
         });
-        document.getElementById('ar-model').setAttribute('model-error-listener', '');
-      });
+        
+        // 初始化AR
+        function initAR() {
+            const scene = document.querySelector('a-scene');
+            
+            // 注册交互组件
+            AFRAME.registerComponent('interactive', {
+                init: function() {
+                    this.el.addEventListener('raycaster-intersected', this.onIntersected.bind(this));
+                    this.el.addEventListener('raycaster-intersection-cleared', this.onIntersectionCleared.bind(this));
+                },
+                
+                onIntersected: function(event) {
+                    console.log('交互触发:', this.el);
+                    this.el.setAttribute('scale', '1.2 1.2 1.2');
+                    this.el.setAttribute('material', 'emissiveIntensity', 0.8);
+                    
+                    // 播放音效
+                    const soundTrigger = document.getElementById('sound-trigger');
+                    if (soundTrigger && soundTrigger.components.sound) {
+                        soundTrigger.components.sound.playSound();
+                    }
+                    
+                    // 添加点击特效
+                    addClickEffect(this.el);
+                },
+                
+                onIntersectionCleared: function(event) {
+                    this.el.setAttribute('scale', '1 1 1');
+                    this.el.setAttribute('material', 'emissiveIntensity', 0.2);
+                }
+            });
+            
+            // 注册手势检测
+            AFRAME.registerComponent('gesture-detector', {
+                init: function() {
+                    this.el.addEventListener('grab-start', this.onGrabStart.bind(this));
+                    this.el.addEventListener('grab-end', this.onGrabEnd.bind(this));
+                },
+                
+                onGrabStart: function(event) {
+                    console.log('手势开始:', this.el);
+                    this.el.setAttribute('animation__grab', {
+                        property: 'scale',
+                        to: '1.5 1.5 1.5',
+                        dur: 200,
+                        easing: 'easeOutElastic'
+                    });
+                },
+                
+                onGrabEnd: function(event) {
+                    console.log('手势结束:', this.el);
+                    this.el.setAttribute('animation__grab', {
+                        property: 'scale',
+                        to: '1 1 1',
+                        dur: 200,
+                        easing: 'easeOutElastic'
+                    });
+                }
+            });
+            
+            // 监听AR事件
+            scene.addEventListener('markerFound', function() {
+                document.getElementById('marker-status').textContent = '✅ 标记已识别';
+                document.getElementById('ar-status').textContent = '🎯 AR激活';
+                addExplosion();
+            });
+            
+            scene.addEventListener('markerLost', function() {
+                document.getElementById('marker-status').textContent = '❌ 失去标记';
+                document.getElementById('ar-status').textContent = '⏳ 等待标记';
+            });
+            
+            console.log('🎮 酷炫AR体验已初始化');
+        }
+        
+        // 切换动画
+        function toggleAnimation() {
+            const animatedElements = document.querySelectorAll('[animation]');
+            animationEnabled = !animationEnabled;
+            
+            animatedElements.forEach(el => {
+                if (animationEnabled) {
+                    el.setAttribute('animation', 'paused', false);
+                } else {
+                    el.setAttribute('animation', 'paused', true);
+                }
+            });
+            
+            document.getElementById('effect-status').textContent = animationEnabled ? '🎭 动画开启' : '🎭 动画暂停';
+        }
+        
+        // 换色模式
+        function changeColors() {
+            currentColorMode = (currentColorMode + 1) % colorModes.length;
+            const colors = colorModes[currentColorMode];
+            
+            const spheres = document.querySelectorAll('a-sphere');
+            spheres.forEach((sphere, index) => {
+                const color = colors[index % colors.length];
+                sphere.setAttribute('material', 'color', color);
+                sphere.setAttribute('material', 'emissive', color);
+            });
+            
+            const boxes = document.querySelectorAll('a-box');
+            boxes.forEach((box, index) => {
+                const color = colors[index % colors.length];
+                box.setAttribute('material', 'color', color);
+                box.setAttribute('material', 'emissive', color);
+            });
+            
+            document.getElementById('effect-status').textContent = '🎨 颜色模式 ' + (currentColorMode + 1);
+        }
+        
+        // 添加爆炸效果
+        function addExplosion() {
+            const stage = document.getElementById('stage');
+            if (!stage) return;
+            
+            // 创建爆炸光环
+            const explosionRing = document.createElement('a-ring');
+            explosionRing.setAttribute('radius', '0.1');
+            explosionRing.setAttribute('radius-inner', '0.05');
+            explosionRing.setAttribute('position', '0 1.5 0');
+            explosionRing.setAttribute('rotation', '-90 0 0');
+            explosionRing.setAttribute('material', 'color: #ffd700; emissive: #ffd700; emissiveIntensity: 1; transparent: true; opacity: 1');
+            explosionRing.setAttribute('animation', {
+                property: 'scale',
+                from: '0.1 0.1 0.1',
+                to: '5 5 5',
+                dur: 1000,
+                easing: 'easeOutQuad'
+            });
+            explosionRing.setAttribute('animation__opacity', {
+                property: 'material.opacity',
+                from: 1,
+                to: 0,
+                dur: 1000,
+                easing: 'easeOutQuad'
+            });
+            
+            stage.appendChild(explosionRing);
+            
+            // 创建爆炸光球
+            for (let i = 0; i < 8; i++) {
+                const angle = (i / 8) * Math.PI * 2;
+                const radius = 2;
+                const x = Math.cos(angle) * radius;
+                const z = Math.sin(angle) * radius;
+                
+                const explosionSphere = document.createElement('a-sphere');
+                explosionSphere.setAttribute('radius', '0.05');
+                explosionSphere.setAttribute('position', `${x} 1.5 ${z}`);
+                explosionSphere.setAttribute('material', 'color: #ff6b6b; emissive: #ff6b6b; emissiveIntensity: 1');
+                explosionSphere.setAttribute('animation', {
+                    property: 'position',
+                    to: `${x * 3} 1.5 ${z * 3}`,
+                    dur: 1000,
+                    easing: 'easeOutQuad'
+                });
+                explosionSphere.setAttribute('animation__scale', {
+                    property: 'scale',
+                    from: '1 1 1',
+                    to: '0.1 0.1 0.1',
+                    dur: 1000,
+                    easing: 'easeOutQuad'
+                });
+                
+                stage.appendChild(explosionSphere);
+                
+                // 1秒后移除光球
+                setTimeout(() => {
+                    if (explosionSphere.parentNode) {
+                        explosionSphere.parentNode.removeChild(explosionSphere);
+                    }
+                }, 1000);
+            }
+            
+            // 1秒后移除爆炸光环
+            setTimeout(() => {
+                if (explosionRing.parentNode) {
+                    explosionRing.parentNode.removeChild(explosionRing);
+                }
+            }, 1000);
+            
+            document.getElementById('effect-status').textContent = '💥 爆炸效果';
+        }
+        
+        // 播放音效
+        function playSound() {
+            const soundTrigger = document.getElementById('sound-trigger');
+            if (soundTrigger && soundTrigger.components.sound) {
+                soundTrigger.components.sound.playSound();
+                document.getElementById('effect-status').textContent = '🔊 播放音效';
+            }
+        }
+        
+        // 切换光效
+        function toggleLights() {
+            const lights = document.querySelectorAll('a-light');
+            const lightSpheres = document.querySelectorAll('a-sphere[radius="0.1"], a-sphere[radius="0.08"]');
+            
+            lightsEnabled = !lightsEnabled;
+            
+            lights.forEach(light => {
+                if (lightsEnabled) {
+                    light.setAttribute('intensity', light.getAttribute('data-original-intensity') || 0.5);
+                } else {
+                    light.setAttribute('data-original-intensity', light.getAttribute('intensity'));
+                    light.setAttribute('intensity', 0);
+                }
+            });
+            
+            lightSpheres.forEach(sphere => {
+                if (lightsEnabled) {
+                    sphere.setAttribute('material', 'emissiveIntensity', sphere.getAttribute('data-original-emissive') || 0.8);
+                } else {
+                    sphere.setAttribute('data-original-emissive', sphere.getAttribute('material').emissiveIntensity);
+                    sphere.setAttribute('material', 'emissiveIntensity', 0);
+                }
+            });
+            
+            document.getElementById('effect-status').textContent = lightsEnabled ? '✨ 光效开启' : '✨ 光效关闭';
+        }
+        
+        // 添加点击特效
+        function addClickEffect(element) {
+            const position = element.getAttribute('position');
+            
+            // 创建点击波纹效果
+            const ripple = document.createElement('a-ring');
+            ripple.setAttribute('radius', '0.5');
+            ripple.setAttribute('radius-inner', '0.4');
+            ripple.setAttribute('position', position);
+            ripple.setAttribute('rotation', '-90 0 0');
+            ripple.setAttribute('material', 'color: #ffffff; transparent: true; opacity: 0.8');
+            ripple.setAttribute('animation', {
+                property: 'scale',
+                from: '0.1 0.1 0.1',
+                to: '3 3 3',
+                dur: 1000,
+                easing: 'easeOutQuad'
+            });
+            ripple.setAttribute('animation__opacity', {
+                property: 'material.opacity',
+                from: 0.8,
+                to: 0,
+                dur: 1000,
+                easing: 'easeOutQuad'
+            });
+            
+            element.parentNode.appendChild(ripple);
+            
+            // 1秒后移除波纹
+            setTimeout(() => {
+                if (ripple.parentNode) {
+                    ripple.parentNode.removeChild(ripple);
+                }
+            }, 1000);
+        }
+        
+        // 全局函数
+        window.toggleAnimation = toggleAnimation;
+        window.changeColors = changeColors;
+        window.addExplosion = addExplosion;
+        window.playSound = playSound;
+        window.toggleLights = toggleLights;
     </script>
 </body>
 </html>
