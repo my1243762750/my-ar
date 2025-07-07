@@ -33,33 +33,23 @@
       arjs="sourceType: webcam; debugUIEnabled: true;"
       cursor="rayOrigin: mouse">
       
-      <!-- 相机 + 光标 -->
-      <a-entity camera look-controls>
-        <a-entity 
-          cursor="fuse: false; rayOrigin: mouse" 
-          raycaster="objects: [data-raycastable]"
-          position="0 0 -1"
-          geometry="primitive: ring; radiusInner: 0.01; radiusOuter: 0.02"
-          material="color: cyan; shader: flat">
-        </a-entity>
-      </a-entity>
+      <!-- 相机（去掉光标环） -->
+      <a-entity camera look-controls></a-entity>
       
       <!-- 标记和3D模型 -->
       <a-marker preset="hiro">
         <a-entity 
           id="ar-model"
-          data-raycastable
-          gltf-model="#robotModel" 
-          scale="0.01 0.01 0.01"
+          gltf-model="#coolModel"
+          scale="2 2 2"
           position="0 0 0"
           rotation="0 180 0"
-          animation="property: rotation; to: 0 540 0; loop: true; dur: 10000; easing: linear"
-          click-listener>
+          animation="property: rotation; to: 0 540 0; loop: true; dur: 10000; easing: linear">
         </a-entity>
       </a-marker>
       
       <a-assets>
-        <a-asset-item id="robotModel" src="https://cdn.jsdelivr.net/gh/KhronosGroup/glTF-Sample-Models@master/2.0/Duck/glTF/Duck.gltf"></a-asset-item>
+        <a-asset-item id="coolModel" src="models/ToyCar.glb"></a-asset-item>
       </a-assets>
     </a-scene>
     
@@ -437,6 +427,17 @@
             document.body.removeChild(fullscreenDiv);
           });
         };
+
+        // 在<script>内添加模型加载失败提示
+        AFRAME.registerComponent('model-error-listener', {
+          init: function () {
+            this.el.addEventListener('model-error', function (e) {
+              alert('3D模型加载失败，请检查网络或更换模型资源！');
+              console.error('3D模型加载失败:', e);
+            });
+          }
+        });
+        document.getElementById('ar-model').setAttribute('model-error-listener', '');
       });
     </script>
 </body>

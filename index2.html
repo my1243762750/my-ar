@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AR面试展示Demo（优化版）</title>
+    <script src="https://aframe.io/releases/1.3.0/aframe.min.js"></script>
+    <script src="https://unpkg.com/ar.js@2.0.8/aframe/build/aframe-ar.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#3B82F6',
+                        secondary: '#10B981',
+                        accent: '#8B5CF6',
+                    },
+                    fontFamily: {
+                        inter: ['Inter', 'sans-serif'],
+                    },
+                }
+            }
+        }
+    </script>
+    <style type="text/tailwindcss">
+        @layer utilities {
+            .content-auto {
+                content-visibility: auto;
+            }
+            .text-shadow {
+                text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            }
+            .backdrop-blur {
+                backdrop-filter: blur(8px);
+            }
+        }
+    </style>
+</head>
+<body class="font-inter bg-gray-900 text-white overflow-hidden h-screen">
+    <!-- AR场景 -->
+    <a-scene 
+        vr-mode-ui="enabled: false" 
+        renderer="colorManagement: true, logarithmicDepthBuffer: true"
+        arjs="trackingMethod: best; sourceType: webcam; debugUIEnabled: false;">
+        
+        <!-- 相机 + 交互光标（cursor） -->
+        <a-camera gps-camera rotation-reader>
+            <!-- 新增：光标（用于点击3D模型） -->
+            <a-cursor 
+                color="#3B82F6" 
+                fuse="true" 
+                fuse-timeout="1500"
+                raycaster="objects: [gltf-model]"> <!-- 只检测带gltf-model的实体 -->
+                <a-animation 
+                    attribute="scale" 
+                    from="0.1 0.1 0.1" 
+                    to="1 1 1" 
+                    dur="1500" 
+                    easing="ease-in" 
+                    repeat="indefinite"></a-animation>
+            </a-cursor>
+        </a-camera>
+        
+        <!-- 标记和3D模型（鸭子模型） -->
+        <a-marker preset="hiro">
+            <a-entity 
+                id="duckModel"  <!-- 给模型加ID，方便绑定事件 -->
+                gltf-model="#robotModel" 
+                scale="0.01 0.01 0.01"
+                position="0 0 0"
+                animation="property: rotation; to: 0 360 0; loop: true; dur: 10000; easing: linear"
+                cursor-listener> <!-- 标记为可被光标点击 -->
+            </a-entity>
+        </a-marker>
+        
+        <!-- 模型资源 -->
+        <a-assets>
+            <a-asset-item id="robotModel" src="https://cdn.jsdelivr.net/gh/KhronosGroup/glTF-Sample-Models@master/2.0/Duck/glTF/Duck.gltf"></a-asset-item>
+        </a-assets>
+    </a-scene>
+    
+    <!-- 信息面板 -->
+    <div class="fixed bottom-0 left-0 right-0 p-4 bg-black/70 backdrop-blur z-50">
+        <div class="container mx-auto">
+            <h1 class="text-[clamp(1.5rem,3vw,2rem)] font-bold text-primary mb-2 text-shadow">
+                <i class="fa fa-cube mr-2"></i>AR交互展示（优化版）
+            </h1>
+            <p class="text-gray-300 mb-4">
+                对准右侧Hiro标记，查看3D鸭子模型。<span class="text-secondary">点击模型可切换颜色</span>。
+            </p>
+            <div class="flex flex-wrap gap-2 mb-2">
+                <span class="px-3 py-1 bg-primary/20 text-primary rounded-full text-sm">
+                    <i class="fa fa-code mr-1"></i>AR.js
+                </span>
+                <span class="px-3 py-1 bg-secondary/20 text-secondary rounded-full text-sm">
+                    <i class="fa fa-hand-pointer-o mr-1"></i>光标交互
+                </span>
+                <span class="px-3 py-1 bg-accent/20 text-accent rounded-full text-sm">
+                    <i class="fa fa-mobile mr-1"></i>响应式
+                </span>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 内置Hiro标记卡（右侧悬浮，方便用户直接用摄像头对着屏幕测试） -->
+    <div class="fixed top-4 right-4 bg-white p-2 rounded-lg shadow-lg z-40 w-32 h-32">
+        <div class="text-xs text-gray-500 mb-1 text-center">Hiro标记（对准此图）</div>
+        <img src="https://raw.githubusercontent.com/AR-js-org/AR.js/master/data/images/hiro.png" 
+             alt="Hiro标记卡" 
+             class="w-full h-full object-contain">
+    </div>
+    
+    <!-- 标记卡提示 -->
+    <div id="markerHint" class="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-black/60 backdrop-blur p-6 rounded-xl text-center z-40 max-w-md">
+        <div class="mb-4">
+            <i class="fa fa-camera text-4xl text-primary mb-3"></i>
+            <h2 class="text-xl font-bold mb-2">未检测到标记</h2>
+            <p class="text-gray-300">请将右侧Hiro标记对准摄像头</p>
+        </div>
+    </div>
+    
+    <!-- 信息模态框 -->
+    <div id="infoModal" class="fixed inset-0 bg-black/80 z-50 flex items-center justify-center hidden">
+        <div class="bg-gray-800 rounded-xl p-6 max-w-md w-full mx-4 transform transition-all">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-xl font-bold text-primary">关于此AR演示</h2>
+                <button id="closeInfoBtn" class="text-gray-400 hover:text-white">
+                    <i class="fa fa-times"></i>
+                </button>
+            </div>
+            <div class="space-y-4 text-gray-300">
+                <p>新增功能：</p>
+                <ul class="list-disc pl-5 space-y-1">
+                    <li>交互光标（可点击3D模型）</li>
+                    <li>内置Hiro标记（无需打印，直接用摄像头对准右侧图片）</li>
+                    <li>点击模型切换颜色的交互逻辑</li>
+                </ul>
+            </div>
+            <div class="mt-6">
+                <button id="closeModalBtn" class="w-full bg-primary hover:bg-primary/90 text-white py-2 rounded-lg transition-colors">
+                    了解了
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 等待场景加载完成
+        document.querySelector('a-scene').addEventListener('loaded', function() {
+            // 隐藏加载提示
+            setTimeout(() => {
+                document.getElementById('markerHint').classList.add('opacity-0', 'transition-opacity', 'duration-1000');
+            }, 3000);
+        });
+
+        // 标记检测状态
+        const marker = document.querySelector('a-marker');
+        const markerHint = document.getElementById('markerHint');
+        
+        marker.addEventListener('markerFound', function() {
+            markerHint.classList.add('hidden');
+        });
+        
+        marker.addEventListener('markerLost', function() {
+            markerHint.classList.remove('hidden');
+            markerHint.classList.remove('opacity-0');
+        });
+
+        // 信息模态框控制
+        const infoBtn = document.getElementById('infoBtn');
+        const closeInfoBtn = document.getElementById('closeInfoBtn');
+        const closeModalBtn = document.getElementById('closeModalBtn');
+        const infoModal = document.getElementById('infoModal');
+        
+        infoBtn.addEventListener('click', function() {
+            infoModal.classList.remove('hidden');
+            infoModal.classList.add('flex');
+        });
+        
+        function closeModal() {
+            infoModal.classList.add('hidden');
+            infoModal.classList.remove('flex');
+        }
+        
+        closeInfoBtn.addEventListener('click', closeModal);
+        closeModalBtn.addEventListener('click', closeModal);
+        
+        // 点击模态框外部关闭
+        infoModal.addEventListener('click', function(e) {
+            if (e.target === infoModal) {
+                closeModal();
+            }
+        });
+
+        // 切换AR会话
+        const toggleARBtn = document.getElementById('toggleARBtn');
+        toggleARBtn.addEventListener('click', function() {
+            const scene = document.querySelector('a-scene');
+            const arSystem = scene.systems['arjs'];
+            
+            if (arSystem && arSystem.arController) {
+                arSystem.arController.reset();
+                markerHint.classList.remove('hidden', 'opacity-0');
+            }
+        });
+
+        // 新增：模型点击交互（切换颜色）
+        const duckModel = document.getElementById('duckModel');
+        const colors = ['#3B82F6', '#10B981', '#8B5CF6', '#EF4444', '#F59E0B']; // 颜色库
+        let currentColorIndex = 0;
+        
+        // 监听模型被点击事件（由cursor触发）
+        duckModel.addEventListener('click', function() {
+            // 切换颜色索引
+            currentColorIndex = (currentColorIndex + 1) % colors.length;
+            const newColor = colors[currentColorIndex];
+            
+            // 改变模型材质颜色
+            duckModel.getObject3D('mesh').traverse(function(node) {
+                if (node.isMesh) {
+                    node.material.color.set(newColor);
+                }
+            });
+        });
+
+        // 移动端触摸旋转
+        let touchStartX = 0;
+        let currentRotationY = 0;
+        
+        document.addEventListener('touchstart', function(e) {
+            if (e.touches.length === 1 && duckModel) {
+                touchStartX = e.touches[0].clientX;
+                currentRotationY = duckModel.getAttribute('rotation').y;
+            }
+        }, false);
+        
+        document.addEventListener('touchmove', function(e) {
+            if (e.touches.length === 1 && duckModel) {
+                const touchX = e.touches[0].clientX;
+                const diffX = touchX - touchStartX;
+                const newRotationY = currentRotationY + diffX * 0.5;
+                
+                duckModel.setAttribute('rotation', { x: 0, y: newRotationY, z: 0 });
+            }
+        }, false);
+    </script>
+</body>
+</html>
